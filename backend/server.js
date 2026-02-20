@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.js';
 import teamRoutes from './routes/team.js';
 import leaveRoutes from "./routes/leave.js"
 import attendanceRoutes from "./routes/attendance.js"
+import dashboardRoutes from "./routes/dashboard.js"
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -21,4 +22,5 @@ app.use('/api/auth', authRoutes);
 app.use("/api/team", teamRoutes);
 app.use("/api/leave", leaveRoutes);
 app.use("/api/attendance", attendanceRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));

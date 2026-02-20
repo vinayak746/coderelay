@@ -3,6 +3,10 @@ import User from "../models/User.js";
 import Team from "../models/Team.js";
 import Attendance from "../models/Attendance.js";
 import { getDatesBetween } from "../utils/dateUtils.js";
+import {
+  getTeamAvailability,
+  calculateImpactScore
+} from "../services/workloadService.js";
 
 export const submitLeave = async (req, res) => {
   try {
@@ -14,23 +18,69 @@ export const submitLeave = async (req, res) => {
 
     const user = await User.findById(req.user._id);
 
+    if (!user.team) {
+      return res.status(400).json({
+        message: "User is not assigned to any team"
+      });
+    }
+
     const leaveDates = getDatesBetween(startDate, endDate);
     const leaveDays = leaveDates.length;
 
     if (user.leaveBalance[leaveType] < leaveDays) {
-      return res.status(400).json({ message: "Not enough leave balance" });
+      return res.status(400).json({
+        message: "Not enough leave balance"
+      });
+    }
+
+    const availability = await getTeamAvailability(
+      user.team,
+      startDate,
+      endDate
+    );
+
+    const impactScore = await calculateImpactScore(
+      user.team,
+      startDate,
+      endDate
+    );
+
+    let status = "pending";
+
+    if (availability >= 60) {
+      status = "auto-approved";
+
+      user.leaveBalance[leaveType] -= leaveDays;
+      await user.save();
+
+      const attendanceRecords = leaveDates.map(date => ({
+        user: user._id,
+        date,
+        status: "leave"
+      }));
+
+      await Attendance.insertMany(attendanceRecords);
     }
 
     const leave = await LeaveRequest.create({
-      user: req.user._id,
-      team: req.user.team,
+      user: user._id,
+      team: user.team,
       startDate,
       endDate,
       leaveType,
-      reason
+      reason,
+      status,
+      impactScore
     });
 
-    res.status(201).json(leave);
+    res.status(201).json({
+      message:
+        status === "auto-approved"
+          ? "Leave auto-approved"
+          : "Leave request submitted",
+      leave,
+      availability
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -38,8 +88,14 @@ export const submitLeave = async (req, res) => {
 
 export const getMyLeaves = async (req, res) => {
   try {
-    const leaves = await LeaveRequest.find({ user: req.user._id });
-    res.json(leaves);
+    const leaves = await LeaveRequest.find({ user: req.user._id })
+      .sort({ createdAt: -1 })
+      .select("startDate endDate leaveType status impactScore createdAt");
+
+    res.json({
+      count: leaves.length,
+      leaves
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
