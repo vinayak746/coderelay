@@ -1,6 +1,8 @@
 import LeaveRequest from "../models/LeaveRequest.js";
 import User from "../models/User.js";
 import Team from "../models/Team.js";
+import Attendance from "../models/Attendance.js";
+import { getDatesBetween } from "../utils/dateUtils.js";
 
 export const submitLeave = async (req, res) => {
   try {
@@ -10,8 +12,13 @@ export const submitLeave = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    if (!req.user.team) {
-      return res.status(400).json({ message: "User is not assigned to any team" });
+    const user = await User.findById(req.user._id);
+
+    const leaveDates = getDatesBetween(startDate, endDate);
+    const leaveDays = leaveDates.length;
+
+    if (user.leaveBalance[leaveType] < leaveDays) {
+      return res.status(400).json({ message: "Not enough leave balance" });
     }
 
     const leave = await LeaveRequest.create({
@@ -38,6 +45,8 @@ export const getMyLeaves = async (req, res) => {
   }
 };
 
+
+
 export const approveLeave = async (req, res) => {
   try {
     const leave = await LeaveRequest.findById(req.params.id);
@@ -46,16 +55,37 @@ export const approveLeave = async (req, res) => {
       return res.status(404).json({ message: "Leave not found" });
     }
 
+    if (leave.status !== "pending") {
+      return res.status(400).json({ message: "Leave already processed" });
+    }
+
+    const user = await User.findById(leave.user);
+
+    const leaveDates = getDatesBetween(leave.startDate, leave.endDate);
+    const leaveDays = leaveDates.length;
+
+    if (user.leaveBalance[leave.leaveType] < leaveDays) {
+      return res.status(400).json({ message: "Insufficient leave balance" });
+    }
+
+    // deduct leave balance per day
+    user.leaveBalance[leave.leaveType] -= leaveDays;
+    await user.save();
+
+    // mark attendance as leave
+    const attendanceRecords = leaveDates.map(date => ({
+      user: user._id,
+      date,
+      status: "leave"
+    }));
+
+    await Attendance.insertMany(attendanceRecords);
+
     leave.status = "approved";
     leave.approvedBy = req.user._id;
     await leave.save();
 
-    // reduce leave balance
-    const user = await User.findById(leave.user);
-    user.leaveBalance[leave.leaveType] -= 1;
-    await user.save();
-
-    res.json({ message: "Leave approved" });
+    res.json({ message: "Leave approved", leaveDays });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
