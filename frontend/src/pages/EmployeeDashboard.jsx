@@ -1,36 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from "react";
+import api from "../lib/axios";
 
 function EmployeeDashboard() {
   const [formData, setFormData] = useState({
-    leaveType: '',
-    startDate: '',
-    endDate: '',
-    reason: '',
+    leaveType: "",
+    startDate: "",
+    endDate: "",
+    reason: "",
   });
 
-  const [leaveHistory] = useState([
-    {
-      id: 1,
-      dateRange: '2026-01-15 to 2026-01-17',
-      type: 'Sick',
-      reason: 'Flu',
-      status: 'Approved',
-    },
-    {
-      id: 2,
-      dateRange: '2026-02-01 to 2026-02-05',
-      type: 'Vacation',
-      reason: 'Family trip',
-      status: 'Approved',
-    },
-    {
-      id: 3,
-      dateRange: '2026-02-10 to 2026-02-12',
-      type: 'Personal',
-      reason: 'Personal matters',
-      status: 'Pending',
-    },
-  ]);
+  const [leaveHistory] = useState([]);
+
+  useEffect(() => {
+    // leave history
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -43,61 +26,83 @@ function EmployeeDashboard() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (formData.endDate < formData.startDate) {
-      alert('End date cannot be before start date');
+      alert("End date cannot be before start date");
       return;
     }
-    if (!formData.leaveType || !formData.startDate || !formData.endDate || !formData.reason) {
-      alert('Please fill in all fields');
+    if (
+      !formData.leaveType ||
+      !formData.startDate ||
+      !formData.endDate ||
+      !formData.reason
+    ) {
+      alert("Please fill in all fields");
       return;
     }
-    alert('Leave request submitted successfully!');
+    api
+      .post("/api/leave/request", formData)
+      .then(({ data }) => {
+        console.log(data);
+        alert("Leave request submitted successfully!");
+      })
+      .catch(console.error);
     setFormData({
-      leaveType: '',
-      startDate: '',
-      endDate: '',
-      reason: '',
+      leaveType: "",
+      startDate: "",
+      endDate: "",
+      reason: "",
     });
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Approved':
-        return { bg: '#ecfdf5', text: '#166534' };
-      case 'Rejected':
-        return { bg: '#fef2f2', text: '#991b1b' };
-      case 'Pending':
-        return { bg: '#fffbeb', text: '#92400e' };
+      case "Approved":
+        return { bg: "#ecfdf5", text: "#166534" };
+      case "Rejected":
+        return { bg: "#fef2f2", text: "#991b1b" };
+      case "Pending":
+        return { bg: "#fffbeb", text: "#92400e" };
       default:
-        return { bg: '#f5f5f4', text: '#44403c' };
+        return { bg: "#f5f5f4", text: "#44403c" };
     }
   };
 
   const inputClass =
-    'w-full px-3 py-2.5 text-[15px] border rounded-md bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-colors';
-  const labelClass = 'block text-[13px] font-medium mb-1.5';
+    "w-full px-3 py-2.5 text-[15px] border rounded-md bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/30 focus:border-[var(--color-accent)] transition-colors";
+  const labelClass = "block text-[13px] font-medium mb-1.5";
 
   return (
     <div className="space-y-10">
       <div>
         <h2
           className="text-2xl"
-          style={{ fontFamily: 'var(--font-display)', color: 'var(--color-text)' }}
+          style={{
+            fontFamily: "var(--font-display)",
+            color: "var(--color-text)",
+          }}
         >
           Request leave
         </h2>
-        <p className="mt-1 text-[15px]" style={{ color: 'var(--color-muted)' }}>
+        <p className="mt-1 text-[15px]" style={{ color: "var(--color-muted)" }}>
           Submit a new leave request and track your history.
         </p>
       </div>
 
       <div
         className="p-6 rounded-lg border"
-        style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}
+        style={{
+          backgroundColor: "var(--color-surface)",
+          borderColor: "var(--color-border)",
+          boxShadow: "var(--shadow-card)",
+        }}
       >
         <form onSubmit={handleSubmit} className="space-y-5 max-w-xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label htmlFor="leaveType" className={labelClass} style={{ color: 'var(--color-text)' }}>
+              <label
+                htmlFor="leaveType"
+                className={labelClass}
+                style={{ color: "var(--color-text)" }}
+              >
                 Leave type
               </label>
               <select
@@ -106,7 +111,7 @@ function EmployeeDashboard() {
                 value={formData.leaveType}
                 onChange={handleChange}
                 className={inputClass}
-                style={{ borderColor: 'var(--color-border)' }}
+                style={{ borderColor: "var(--color-border)" }}
                 required
               >
                 <option value="">Choose type</option>
@@ -116,7 +121,11 @@ function EmployeeDashboard() {
               </select>
             </div>
             <div>
-              <label htmlFor="startDate" className={labelClass} style={{ color: 'var(--color-text)' }}>
+              <label
+                htmlFor="startDate"
+                className={labelClass}
+                style={{ color: "var(--color-text)" }}
+              >
                 Start date
               </label>
               <input
@@ -126,12 +135,16 @@ function EmployeeDashboard() {
                 value={formData.startDate}
                 onChange={handleChange}
                 className={inputClass}
-                style={{ borderColor: 'var(--color-border)' }}
+                style={{ borderColor: "var(--color-border)" }}
                 required
               />
             </div>
             <div>
-              <label htmlFor="endDate" className={labelClass} style={{ color: 'var(--color-text)' }}>
+              <label
+                htmlFor="endDate"
+                className={labelClass}
+                style={{ color: "var(--color-text)" }}
+              >
                 End date
               </label>
               <input
@@ -142,14 +155,18 @@ function EmployeeDashboard() {
                 onChange={handleChange}
                 min={formData.startDate}
                 className={inputClass}
-                style={{ borderColor: 'var(--color-border)' }}
+                style={{ borderColor: "var(--color-border)" }}
                 required
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="reason" className={labelClass} style={{ color: 'var(--color-text)' }}>
+            <label
+              htmlFor="reason"
+              className={labelClass}
+              style={{ color: "var(--color-text)" }}
+            >
               Reason
             </label>
             <textarea
@@ -159,7 +176,7 @@ function EmployeeDashboard() {
               onChange={handleChange}
               rows={3}
               className={inputClass}
-              style={{ borderColor: 'var(--color-border)' }}
+              style={{ borderColor: "var(--color-border)" }}
               placeholder="Brief reason for your leave (optional but helpful)"
               required
             />
@@ -168,7 +185,7 @@ function EmployeeDashboard() {
           <button
             type="submit"
             className="px-5 py-2.5 text-[15px] font-medium rounded-md transition-colors"
-            style={{ backgroundColor: 'var(--color-accent)', color: '#fff' }}
+            style={{ backgroundColor: "var(--color-accent)", color: "#fff" }}
           >
             Submit request
           </button>
@@ -176,26 +193,44 @@ function EmployeeDashboard() {
       </div>
 
       <div>
-        <h3 className="text-lg font-medium mb-4" style={{ color: 'var(--color-text)' }}>
+        <h3
+          className="text-lg font-medium mb-4"
+          style={{ color: "var(--color-text)" }}
+        >
           Your leave history
         </h3>
         <div
           className="rounded-lg border overflow-hidden"
-          style={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+          style={{
+            backgroundColor: "var(--color-surface)",
+            borderColor: "var(--color-border)",
+          }}
         >
           <table className="min-w-full">
             <thead>
-              <tr style={{ backgroundColor: 'rgba(0,0,0,0.02)' }}>
-                <th className="px-5 py-3 text-left text-[12px] font-medium uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
+              <tr style={{ backgroundColor: "rgba(0,0,0,0.02)" }}>
+                <th
+                  className="px-5 py-3 text-left text-[12px] font-medium uppercase tracking-wider"
+                  style={{ color: "var(--color-muted)" }}
+                >
                   Dates
                 </th>
-                <th className="px-5 py-3 text-left text-[12px] font-medium uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
+                <th
+                  className="px-5 py-3 text-left text-[12px] font-medium uppercase tracking-wider"
+                  style={{ color: "var(--color-muted)" }}
+                >
                   Type
                 </th>
-                <th className="px-5 py-3 text-left text-[12px] font-medium uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
+                <th
+                  className="px-5 py-3 text-left text-[12px] font-medium uppercase tracking-wider"
+                  style={{ color: "var(--color-muted)" }}
+                >
                   Reason
                 </th>
-                <th className="px-5 py-3 text-left text-[12px] font-medium uppercase tracking-wider" style={{ color: 'var(--color-muted)' }}>
+                <th
+                  className="px-5 py-3 text-left text-[12px] font-medium uppercase tracking-wider"
+                  style={{ color: "var(--color-muted)" }}
+                >
                   Status
                 </th>
               </tr>
@@ -207,11 +242,16 @@ function EmployeeDashboard() {
                   <tr
                     key={leave.id}
                     className="border-t transition-colors hover:bg-black/[0.02]"
-                    style={{ borderColor: 'var(--color-border)' }}
+                    style={{ borderColor: "var(--color-border)" }}
                   >
-                    <td className="px-5 py-3.5 text-[14px]">{leave.dateRange}</td>
+                    <td className="px-5 py-3.5 text-[14px]">
+                      {leave.dateRange}
+                    </td>
                     <td className="px-5 py-3.5 text-[14px]">{leave.type}</td>
-                    <td className="px-5 py-3.5 text-[14px]" style={{ color: 'var(--color-muted)' }}>
+                    <td
+                      className="px-5 py-3.5 text-[14px]"
+                      style={{ color: "var(--color-muted)" }}
+                    >
                       {leave.reason}
                     </td>
                     <td className="px-5 py-3.5">
