@@ -66,15 +66,8 @@ export const submitLeave = async (req, res) => {
       team: user.team,
       startDate,
       endDate,
-<<<<<<< HEAD
-      leaveType,
-      reason,
-      status,
-      impactScore
-=======
       leaveType: leaveType.toLowerCase(),
       reason,
->>>>>>> ff6fa2feba353f6b000508c0148896cc81158edc
     });
 
     res.status(201).json({
