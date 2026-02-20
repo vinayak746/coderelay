@@ -1,6 +1,5 @@
 import LeaveRequest from "../models/LeaveRequest.js";
 import User from "../models/User.js";
-import Team from "../models/Team.js";
 import Attendance from "../models/Attendance.js";
 import { getDatesBetween } from "../utils/dateUtils.js";
 
@@ -26,12 +25,13 @@ export const submitLeave = async (req, res) => {
       team: req.user.team,
       startDate,
       endDate,
-      leaveType,
-      reason
+      leaveType: leaveType.toLowerCase(),
+      reason,
     });
 
     res.status(201).json(leave);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -44,8 +44,6 @@ export const getMyLeaves = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-
 
 export const approveLeave = async (req, res) => {
   try {
@@ -73,10 +71,10 @@ export const approveLeave = async (req, res) => {
     await user.save();
 
     // mark attendance as leave
-    const attendanceRecords = leaveDates.map(date => ({
+    const attendanceRecords = leaveDates.map((date) => ({
       user: user._id,
       date,
-      status: "leave"
+      status: "leave",
     }));
 
     await Attendance.insertMany(attendanceRecords);
@@ -111,11 +109,14 @@ export const rejectLeave = async (req, res) => {
 
 export const getTeamLeaves = async (req, res) => {
   try {
-    const leaves = await LeaveRequest.find({ team: req.user.team })
-      .populate("user", "name email");
+    const leaves = await LeaveRequest.find({ team: req.user.team }).populate(
+      "user",
+      "name email",
+    );
 
     res.json(leaves);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+

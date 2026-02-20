@@ -1,15 +1,15 @@
-import axios from 'axios';
+import axios from "axios";
 
 const api = axios.create({
-  baseURL: 'https://api.example.com', // Change to your API base URL
+  baseURL: "http://localhost:3000", // Change to your API base URL
   timeout: 10000,
 });
 
 export function setAuthToken(token) {
   if (token) {
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
   } else {
-    delete api.defaults.headers.common['Authorization'];
+    delete api.defaults.headers.common["Authorization"];
   }
 }
 
