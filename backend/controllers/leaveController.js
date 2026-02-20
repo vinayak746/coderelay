@@ -41,12 +41,13 @@ export const submitLeave = async (req, res) => {
     const impactScore = await calculateImpactScore(
       user.team,
       startDate,
-      endDate
+      endDate,
+      user._id
     );
 
     let status = "pending";
 
-    if (availability >= 60) {
+    if (impactScore < 50) {
       status = "auto-approved";
 
       user.leaveBalance[leaveType] -= leaveDays;
@@ -66,8 +67,10 @@ export const submitLeave = async (req, res) => {
       team: user.team,
       startDate,
       endDate,
-      leaveType: leaveType.toLowerCase(),
+      leaveType,
       reason,
+      status,
+      impactScore
     });
 
     res.status(201).json({
@@ -76,10 +79,10 @@ export const submitLeave = async (req, res) => {
           ? "Leave auto-approved"
           : "Leave request submitted",
       leave,
-      availability
+      availability,
+      impactScore
     });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: err.message });
   }
 };
