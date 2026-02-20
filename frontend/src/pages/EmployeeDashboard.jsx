@@ -9,10 +9,13 @@ function EmployeeDashboard() {
     reason: "",
   });
 
-  const [leaveHistory] = useState([]);
+  const [leaveHistory, setLeaveHistory] = useState([]);
 
   useEffect(() => {
-    // leave history
+    api.get("/api/leave/my-leaves").then(({ data: { count, leaves } }) => {
+      console.log(leaves);
+      setLeaveHistory(leaves);
+    });
   }, []);
 
   const handleChange = (e) => {
@@ -225,7 +228,7 @@ function EmployeeDashboard() {
                   className="px-5 py-3 text-left text-[12px] font-medium uppercase tracking-wider"
                   style={{ color: "var(--color-muted)" }}
                 >
-                  Reason
+                  Impact Score
                 </th>
                 <th
                   className="px-5 py-3 text-left text-[12px] font-medium uppercase tracking-wider"
@@ -240,19 +243,22 @@ function EmployeeDashboard() {
                 const sc = getStatusColor(leave.status);
                 return (
                   <tr
-                    key={leave.id}
-                    className="border-t transition-colors hover:bg-black/[0.02]"
+                    key={leave._id}
+                    className="border-t transition-colors hover:bg-black/2"
                     style={{ borderColor: "var(--color-border)" }}
                   >
                     <td className="px-5 py-3.5 text-[14px]">
-                      {leave.dateRange}
+                      {new Date(leave.startDate).toLocaleDateString()} -{" "}
+                      {new Date(leave.endDate).toLocaleDateString()}
                     </td>
-                    <td className="px-5 py-3.5 text-[14px]">{leave.type}</td>
+                    <td className="px-5 py-3.5 text-[14px]">
+                      {leave.leaveType}
+                    </td>
                     <td
                       className="px-5 py-3.5 text-[14px]"
                       style={{ color: "var(--color-muted)" }}
                     >
-                      {leave.reason}
+                      {leave.impactScore.toFixed(2)}
                     </td>
                     <td className="px-5 py-3.5">
                       <span

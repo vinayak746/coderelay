@@ -53,11 +53,14 @@ function Login() {
 
     setAuthToken(token);
 
-    const { user } = await api.get("http://localhost:3000/api/auth/me");
+    const { data: user } = await api.get("http://localhost:3000/api/auth/me");
 
     login(user, token);
 
     setSubmitting(false);
+    if (!user) {
+      console.log({ token, user });
+    }
     navigate(user.role === "manager" ? "/manager" : "/");
   };
 
